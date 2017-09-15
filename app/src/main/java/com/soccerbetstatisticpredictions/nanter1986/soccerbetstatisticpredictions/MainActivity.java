@@ -27,6 +27,8 @@ public class MainActivity extends Activity {
     private ArrayList<String> allScores=new ArrayList<>();
     private ArrayList<String> allValues=new ArrayList<>();
     private Elements matchCards;
+    private ArrayList<Double> allValuesDouble=new ArrayList<>();
+    private ArrayList<SoccerMatch> allReadyMatches=new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,18 +64,31 @@ public class MainActivity extends Activity {
             Log.i("results",allScores.toString());
             Log.i("results",matchCards.size()+"");
             Log.i("results",allValues.toString());
+            String toShowInTextview="";
+            for(SoccerMatch s:allReadyMatches){
+                toShowInTextview+=s.printSelf();
+            }
+            resultsTextview.setText(toShowInTextview);
 
         }
 
         protected void grabNextMatchDayURL(){
             //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/GB1";
-            String urlForJsoup = "https://www.transfermarkt.gr/serie-a/startseite/wettbewerb/IT1";
+            //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/ES1";
+            //String urlForJsoup = "https://www.transfermarkt.gr/serie-a/startseite/wettbewerb/IT1";
+            //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/FR1";
+            //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/L1";
+            //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/PO1";
+            //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/BE1";
+            String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/NL1";
+            //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/GB2";
             try {
                 doc = Jsoup.connect(urlForJsoup).get();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             links=doc.select("div.footer-links").select("a[href]");
+            Log.i("results",links.toString());
             selectedUrl="https://www.transfermarkt.gr"+links.get(3).attr("href");
             try {
                 doc2 = Jsoup.connect(selectedUrl).get();
@@ -81,24 +96,69 @@ public class MainActivity extends Activity {
                 e.printStackTrace();
             }
             tableHomeTeams=doc2.select("div.box").select("tr.table-grosse-schrift").select("td.hide-for-small.spieltagsansicht-vereinsname").select("a");
+            Log.i("results",tableHomeTeams.toString());
             for(Element e:tableHomeTeams){
-                allTeams.add(e.text());
+                if(e.text().equals("")){
+
+                }else{
+                    allTeams.add(e.text());
+                }
+
             }
-            scores=doc2.select("div.box").select("tr.table-grosse-schrift").select("td.spieltagsansicht-ergebnis").select("a.ergebnis-link");
+            scores=doc2.select("div.box").select("tr.table-grosse-schrift").select("td.spieltagsansicht-ergebnis").select("span.ergebnis-box").select("a");
+            Log.i("results",scores.toString());
             for(Element e:scores){
                 allScores.add(e.text());
             }
             matchCards =doc2.select("div.large-8.columns").select("div.box").select("table");
+            //Log.i("results",matchCards.toString());
             int cardsSize=matchCards.size();
-            for(int i=1;i<cardsSize-1;i++){
+            for(int i=1;i<cardsSize;i++){
                 if(allScores.get(i-1).equals("-:-")){
-                    allValues.add(matchCards.get(i).select("td.rechts-no-padding").select("a").select("span.wert-bar").text());
-                    allValues.add(matchCards.get(i).select("td.rechts-no-padding").select("a").select("span.wert-bar-right").text());
+                    allValues.add(matchCards.get(i).select("td").select("a").select("span.wert-bar").text());
+                    allValues.add(matchCards.get(i).select("td").select("a").select("span.wert-bar-right").text());
                 }else{
                     allValues.add("-1");
                     allValues.add("-1");
                 }
             }
+            for(String s:allValues){
+                Double thisValue=extractDoubleValue(s);
+                Log.i("results",thisValue.toString());
+                allValuesDouble.add(thisValue);
+
+            }
+            Log.i("results","avd\n"+allValuesDouble.toString());
+            constractMatches();
         }
+    }
+
+    private void constractMatches() {
+        int length = allTeams.size();
+        Log.i("results",length+"");
+        for(int i=0;i<length;i=i+2){
+            allReadyMatches.add(new SoccerMatch(allTeams.get(i),allTeams.get(i+1),allValuesDouble.get(i),allValuesDouble.get(i+1)));
+        }
+        for(SoccerMatch s:allReadyMatches){
+            Log.i("results",s.printSelf());
+        }
+    }
+
+    private Double extractDoubleValue(String s) {
+        char[] arrayC=s.toCharArray();
+        String theValueInString="";
+        for(char c:arrayC){
+            if(c==' '){
+                break;
+            }
+            if(c==','){
+                theValueInString+='.';
+            }else{
+                theValueInString+=c;
+            }
+
+        }
+        Double valueInDouble=Double.parseDouble(theValueInString);
+        return valueInDouble;
     }
 }
