@@ -27,7 +27,13 @@ public class SoccerMatch {
     }
 
     public String printSelf(){
-        String printOut=homeName+"<"+round(homeMinimumOdds,2)+">---"+awayName+"<"+round(awayDrawMinimumOdds,2)+">\n";
+        String printOut;
+        if(homeValue==-1.0 || awayValue==-1.0){
+            printOut="";
+        }else{
+            printOut=homeName+"<"+round(homeMinimumOdds,2)+">---"+awayName+"<"+round(awayDrawMinimumOdds,2)+">\n";
+
+        }
         return printOut;
     }
 

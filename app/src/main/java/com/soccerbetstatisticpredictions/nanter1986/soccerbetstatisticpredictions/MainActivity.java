@@ -19,6 +19,7 @@ public class MainActivity extends Activity {
     TextView resultsTextview;
     private Document doc;
     private Elements links;
+    String urlForJsoup;
     String selectedUrl;
     private Document doc2;
     private Elements tableHomeTeams;
@@ -34,8 +35,25 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        urlForJsoup=getTheExtras(savedInstanceState);
+        Log.i("results",urlForJsoup);
         setupViews();
         new GetTheData().execute();
+    }
+
+    private String getTheExtras(Bundle savedInstanceState) {
+        String newString;
+        if (savedInstanceState == null) {
+            Bundle extras = getIntent().getExtras();
+            if(extras == null) {
+                newString= null;
+            } else {
+                newString= extras.getString("theLink");
+            }
+        } else {
+            newString= (String) savedInstanceState.getSerializable("theLink");
+        }
+        return newString;
     }
 
     private void setupViews() {
@@ -80,7 +98,7 @@ public class MainActivity extends Activity {
             //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/L1";
             //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/PO1";
             //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/BE1";
-            String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/NL1";
+            //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/NL1";
             //String urlForJsoup = "https://www.transfermarkt.gr/jumplist/startseite/wettbewerb/GB2";
             try {
                 doc = Jsoup.connect(urlForJsoup).get();
@@ -106,7 +124,7 @@ public class MainActivity extends Activity {
 
             }
             scores=doc2.select("div.box").select("tr.table-grosse-schrift").select("td.spieltagsansicht-ergebnis").select("span.ergebnis-box").select("a");
-            Log.i("results",scores.toString());
+            Log.i("results","scores\n"+scores.toString());
             for(Element e:scores){
                 allScores.add(e.text());
             }
@@ -122,10 +140,16 @@ public class MainActivity extends Activity {
                     allValues.add("-1");
                 }
             }
+            Log.i("results","allvalues\n"+allValues.toString());
             for(String s:allValues){
-                Double thisValue=extractDoubleValue(s);
-                Log.i("results",thisValue.toString());
-                allValuesDouble.add(thisValue);
+                if(s.equals("")){
+
+                }else{
+                    Double thisValue=extractDoubleValue(s);
+                    Log.i("results",thisValue.toString());
+                    allValuesDouble.add(thisValue);
+                }
+
 
             }
             Log.i("results","avd\n"+allValuesDouble.toString());
@@ -147,18 +171,24 @@ public class MainActivity extends Activity {
     private Double extractDoubleValue(String s) {
         char[] arrayC=s.toCharArray();
         String theValueInString="";
-        for(char c:arrayC){
-            if(c==' '){
-                break;
-            }
-            if(c==','){
-                theValueInString+='.';
-            }else{
-                theValueInString+=c;
-            }
+        Double valueInDouble;
+        if(s.equals(-1)){
+            valueInDouble=-1.0;
+        }else{
+            for(char c:arrayC){
+                if(c==' '){
+                    break;
+                }
+                if(c==','){
+                    theValueInString+='.';
+                }else{
+                    theValueInString+=c;
+                }
 
+            }
+            valueInDouble=Double.parseDouble(theValueInString);
         }
-        Double valueInDouble=Double.parseDouble(theValueInString);
+
         return valueInDouble;
     }
 }
